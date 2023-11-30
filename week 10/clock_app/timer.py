@@ -1,37 +1,24 @@
 import datetime
 import time
 import pickle
-#from playsound import playsound
+from playsound import playsound
+#import threading
 
-#terminal and gui versions
-#TODO Clock, alarm, timer functionalities
-#Clock options: show date (on/off), show seconds (on/off), 12/24h (on/off)
-#Alarm options: alarm on hour next day, alarm on selected date, custom sound, delete all alarms
-#Timer functionalities: save timers, delete timers, 
 
-#Alarm pseudocode DONE
-#prompt for alarm mode DONE
-#mode 1:
-#set alarm or show alarms
-#if set alarms
-#prompt for setting hour / date of alarm
-##convert to seconds
-#display alarm date to user, at what time is alarm set + add functionality to check active timers
-#add alarm to pickle file
-#if show alarms
-#display from pickle file
-#at alarm date play sound, prompt "stop" to stop alarm or "snooze" to add 5 minutes
-#mode 2:
-#prompt for setting
-#1 date on/off
-#2 show seconds on/off
-#3 12/24h on/off
-#4 custom sound
-#mode 3:
-#prompt for confirmation
-#if yes, empty alarm files
-#if no, comeback to mode selection
 
+def alarm_sound(alarm_seconds):
+   while True:
+       now = datetime.datetime.now()
+       now_in_seconds = sum([a*b for a,b in zip(seconds_hms, [now.hour, now.minute, now.second])])
+       if now_in_seconds == alarm_seconds:
+           playsound("alarm.mp3")
+           user_input = input("Type 'stop' or 'snooze': ")
+           if user_input.lower() == 'stop':
+               break
+           elif user_input.lower() == 'snooze':
+               time.sleep(300) # Snooze for 5 minutes
+           else:
+               print("Invalid input. Please type 'stop' or 'snooze'.")
 
 def pick_mode():
     while True:
@@ -40,57 +27,94 @@ def pick_mode():
             return mode
         except ValueError:
             print("This input is invalid")
+def two_options():
+    while True:
+        try:
+            mode = int(input("Please choose a mode 1,2 or close program by pressing ctrl + c: "))
+            return mode
+        except ValueError:
+            print("This input is invalid")
 
 while True:
     print("Clock program mode selection: ")
     print("1: Run Alarm. 2: Run Clock. 3: Run Stopwatch. 4: Run Timer or close program by pressing ctrl + c: ")
-    
+    print()
     program_mode = pick_mode()
 
     if program_mode == 1:
         #ALARM CODE
         while True:
-            alarms = []
+            
 
             try:
                 with open('alarms.pkl', 'rb') as alarms_file:
-                        alarms = pickle.load(alarms_file)
-            except IOError:
-                    pass
+                        alarms_list = pickle.load(alarms_file)
+            except FileNotFoundError:
+                    alarms_list = []
             print("Alarm mode selection: ")
             print("1: Set alarm. 2: Set alarm options. 3: Delete all alarms. 4: Change clock mode")
-            
+            print()
             alarm_mode = pick_mode()
 
             if alarm_mode == 1:
                 print("Alarm setting mode selection: ")
-                print("1: Set new alarm. 2: Show alarms 3: Change alarm mode")
-
-                setting_alarm_mode = pick_mode()
+                print("1: Set new alarm. 2: Show alarms")
+                print()
+                setting_alarm_mode = two_options()
+                
                 if setting_alarm_mode == 1:
                     #setting alarms code
                     
-                    
                     while True:
-                        try:
-                            alarm_time = input("Enter time in the format HH:MM:SS: ")
-                            hours, minutes, seconds = map(int, alarm_time.split(':'))
-                            if minutes > 60 or seconds > 60:
-                                print("Invalid input. Please enter time in the format HH:MM:SS. Do not type minutes or seconds > 60")
-                            else:
-                                hours, minutes, seconds = map(int, alarm_time.split(':'))
-                                break
-                        except ValueError:
-                            print("Invalid input. Please enter time in the format HH:MM:SS.")
-                    seconds_total = (hours * 60 * 60) + (minutes * 60)
-                
-                                  
-                
-                    print("Alarm set!")
-                elif setting_alarm_mode == 2:
-                    #show alarms code
-                    print("Show alarms")
+                        alarm_input = input("Enter time in the format HH:MM:SS or press q to return to the alarm menu: ")
+                        if alarm_input.lower() == "q":
+                            break
+                        alarm_time = [int(n) for n in alarm_input.split(":")]
+                        if alarm_time[0] >= 24 or alarm_time[0] < 0:
+                            print("Invalid input. Please enter time in the format HH:MM:SS or press q to return to the alarm menu.")
+                            continue
+                        elif alarm_time[1] >= 60 or alarm_time[1] < 0:
+                            print("Invalid input. Please enter time in the format HH:MM:SS or press q to return to the alarm menu.")
+                            continue
+                        elif alarm_input.lower() == "q":
+                            break
+                        else:
 
+                            # Number of seconds in an Hour, Minute, and Second
+                            seconds_hms = [3600, 60, 1]
+
+                            # Convert the alarm time to seconds
+                            alarm_seconds = sum([a*b for a,b in zip(seconds_hms[:len(alarm_time)], alarm_time)])
+                            now = datetime.datetime.now()
+                            now_in_seconds = sum([a*b for a,b in zip(seconds_hms, [now.hour, now.minute, now.second])])
+                            time_until_alarm = alarm_seconds - now_in_seconds
+                            if time_until_alarm < 0:
+                                time_until_alarm += 86400 # number of seconds in a day
+
+                            alarms_list.append(time_until_alarm)
+                            print("Alarm is set!")
+                            
+                            hours, remainder = divmod(time_until_alarm, 3600)
+                            minutes, seconds = divmod(remainder, 60)
+                            print("The alarm will ring at: %02d hours %02d minutes %02d seconds" % (hours, minutes, seconds))
+
+                        
+                            with open('alarms.pkl','wb') as alarms_file:
+                                pickle.dump(alarms_list, alarms_file)
+                        
+                            #alarm_threads = []
+                            #for alarm_seconds in alarms_list:
+                            #    alarm_thread = threading.Thread(target=alarm_sound, args=(alarm_seconds,))
+                            #    alarm_thread.start()
+                            #    alarm_threads.append(alarm_thread)              
+                            #break
+
+                if setting_alarm_mode == 2:
+                    headers = ("Date", "Time")
+                    print("{:<10} {:<10}".format(*headers))
+                    for alarm in alarms_list:
+                        print("{:<10} {:<10}".format(alarm["date"], alarm["time"]))
+                print()
             elif alarm_mode == 2:
                  #alarm settings
                  print("Alarm settings")
