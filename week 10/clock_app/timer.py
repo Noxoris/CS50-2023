@@ -47,8 +47,11 @@ def clear_threads__and_lists(threads_list, items_list, file_name):
        pickle.dump([], file)
 
 def load_files():
+    global AM_PM_format
     global alarms_list
     global alarm_threads_list
+    global show_date
+    global show_seconds
     global snooze_duration
     global sound_file
     global stopwatch_records
@@ -100,6 +103,16 @@ def load_files():
     #If there is no file, set to default of 5
     except FileNotFoundError:
         snooze_duration = 5
+    try:    
+            #Load settings from file
+            with open('clock_settings.pkl', 'rb') as settings_file:
+                loaded_settings = pickle.load(settings_file)
+            show_date, show_seconds, AM_PM_format = loaded_settings
+    except:
+            #If there is no file, reset settings
+            show_date = 0
+            show_seconds = 0
+            AM_PM_format = 0
 
 def pick_mode():
     while True:
@@ -196,7 +209,10 @@ def play_alarm():
     if sound_file is not None:
         alarm_sound = pygame.mixer.Sound(sound_file)
     else:
-        alarm_sound = pygame.mixer.Sound("alarm.mp3")
+       filepath = os.path.abspath(__file__)
+       filedir = os.path.dirname(filepath)
+       alarm_sound_path = os.path.join(filedir, "alarm.mp3")
+       alarm_sound = pygame.mixer.Sound(alarm_sound_path)
     alarm_sound.play(-1) 
    except:
         print("Failed to play sound")
@@ -318,17 +334,7 @@ def clock_settings():
     global show_date
     global show_seconds
     global AM_PM_format
-    try:    
-            #Load settings from file
-            with open('clock_settings.pkl', 'rb') as settings_file:
-                loaded_settings = pickle.load(settings_file)
-            show_date, show_seconds, AM_PM_format = loaded_settings
-    except:
-            #If there is no file, reset settings
-            show_date = 0
-            show_seconds = 0
-            AM_PM_format = 0
-
+    
     #Display current settings
     print("Current settings: ")
     print(f"Show date: {show_date}")
@@ -428,7 +434,10 @@ def timer_expired(item, timer_index):
              pygame.mixer.init()           
              print("\r")
              print("Timer has expired! Press anything to return")
-             timer_sound = pygame.mixer.Sound("timer.mp3")
+             filepath = os.path.abspath(__file__)
+             filedir = os.path.dirname(filepath)
+             sound_path = os.path.join(filedir, "timer.mp3")
+             timer_sound = pygame.mixer.Sound(sound_path)
              timer_sound.play()
              #Remove timer and it's thread from lists       
              timers_list.remove(item)
@@ -447,6 +456,7 @@ clear()
 load_files()
 
 while True:
+        #clock_settings()
         clear()
         print("Welcome")  
         print("Program mode selection: ")
@@ -512,9 +522,9 @@ while True:
                         print("Alarm setting menu supports only inputs: 1,2 or 3.")    
 
                 #Alarm settings
-                elif alarm_mode == 2:
-                    clear()
+                elif alarm_mode == 2:                   
                     while True:
+                        clear()
                         print("Alarm settings")
                         print("1. Alarm sound, 2. Snooze duration 3. Return")
                         alarm_setting = three_options()
@@ -523,7 +533,7 @@ while True:
 
                         elif alarm_setting == 2:
                             set_snooze_duration()
-
+                            clear()
                         elif alarm_setting == 3:
                             clear()
                             break
@@ -538,7 +548,7 @@ while True:
                 elif alarm_mode == 3:
                     while True:
                         clear()
-                        confirmation = input("Are you sure? There is no going back from this (y/n) / (yes/no): ")
+                        confirmation = input("Are you sure? There is no going back from this (y, yes / n, no): ")
                         confirmation = confirmation.strip().lower()
 
                         if confirmation in ["y", "yes"]:
@@ -590,8 +600,10 @@ while True:
                         print("Current time:")
 
                         #Print current time formatted using settings
-                        print(clock_now.strftime(settings))
-                        print()  
+                        print(clock_now.strftime(settings_format))
+                        print()
+                        list_sleep = input("Press anything to go back")
+
                     else:
                         print("Invalid settings")
 
@@ -617,8 +629,9 @@ while True:
                     settings_format = settings.get((show_date, show_seconds, AM_PM_format))
                     #Print formatted time
                     formatted_time = current_time.strftime(settings_format)
-                    print(formatted_time)
-                    clear()  
+                    clear() 
+                    print(f"Time in {city}: {formatted_time}")
+                    list_sleep = input("Press anything to go back")
 
                 #Set settings
                 elif clock_mode == 3:
@@ -779,7 +792,7 @@ while True:
                     clear()
                     while True:
                         try:
-                            confirmation = input("Are you sure? There is no going back from this (y/n) / (yes/no): ")
+                            confirmation = input("Are you sure? There is no going back from this (y, yes / n, no): ")
                             confirmation = confirmation.strip().lower()
 
                             if confirmation in ["y", "yes"]:
