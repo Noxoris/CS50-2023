@@ -27,7 +27,7 @@ stopwatch_records = []
 global timer_active
 timer_active = False
 
-global timers_list 
+global timers_list
 timers_list = []
 
 global timer_threads_list
@@ -56,46 +56,45 @@ def load_files():
     global sound_file
     global stopwatch_records
     global timers_list
-    
+
     #Load alarms set during previous program launches
     try:
         with open('alarms.pkl', 'rb') as alarms_file:
             alarms_list = pickle.load(alarms_file)
-        #Start alarms that were set during previous program launches    
+        #Start alarms that were set during previous program launches
         for alarm in alarms_list:
             set_alarm(alarm, "no")
-    #If there are none, create empty list of alarms           
+    #If there are none, create empty list of alarms
     except:
-    #     print("ERROR")
         alarms_list = []
-        
+
     #Load stopwatch records made during previous program launches
         try:
             with open('stopwatch_records.pkl', 'rb') as stopwatch_file:
                 stopwatch_records = pickle.load(stopwatch_file)
-            
-        #If there are none, create empty list of timers 
+
+        #If there are none, create empty list of timers
         except:
-            stopwatch_records = []    
+            stopwatch_records = []
 
     #Load timers set during previous program launches
     try:
         with open('timers.pkl', 'rb') as timer_file:
             timers_list = pickle.load(timer_file)
-        #Start timers that were set during previous program launches    
+        #Start timers that were set during previous program launches
         for timer in timers_list:
             start_timer(timer[0],timer[1],timer[2])
-        #If there are none, create empty list of timers        
+        #If there are none, create empty list of timers
     except:
         timers_list = []
 
     #Load alarm file preference
     try:
         with open('sound_file.pkl', 'rb') as sound_preference__file:
-            sound_file = pickle.load(sound_preference__file)   
+            sound_file = pickle.load(sound_preference__file)
     except FileNotFoundError:
-        sound_file = None    
-    
+        sound_file = None
+
     #Load snooze duration preference
     try:
         with open('snooze_duration.txt', 'r') as snooze_duration_file:
@@ -103,7 +102,7 @@ def load_files():
     #If there is no file, set to default of 5
     except FileNotFoundError:
         snooze_duration = 5
-    try:    
+    try:
             #Load settings from file
             with open('clock_settings.pkl', 'rb') as settings_file:
                 loaded_settings = pickle.load(settings_file)
@@ -117,8 +116,8 @@ def load_files():
 def pick_mode():
     while True:
         global alarm_sound
-        global snooze_active  
-        global timer_active       
+        global snooze_active
+        global timer_active
         try:
             print()
             mode = (input("Please choose a mode 1,2,3,4 or close program by pressing ctrl + c: "))
@@ -134,19 +133,19 @@ def pick_mode():
                 #Set flag to false, so the other menu will work normally
                 snooze_active = False
                 continue
-            elif snooze_active == True and mode.strip().lower() in ["no", "n"]:                   
+            elif snooze_active == True and mode.strip().lower() in ["no", "n"]:
                 snooze_active = False
                 alarm_sound.stop()
                 continue
             #Prevents main menu from breaking timer
             if timer_active == True:
                 mode = 1851323596
-                timer_active = False              
+                timer_active = False
             #Main mode
             else:
                 mode = int(mode)
             return mode
-            
+
         except ValueError:
             print("This input is invalid")
 
@@ -168,7 +167,7 @@ def three_options():
                 #Set flag to false, so the other menu will work normally
                 snooze_active = False
                 continue
-            elif snooze_active == True and mode.strip().lower() in ["no", "n"]:                   
+            elif snooze_active == True and mode.strip().lower() in ["no", "n"]:
                 snooze_active = False
                 alarm_sound.stop()
                 continue
@@ -179,7 +178,7 @@ def three_options():
             #Main mode
             else:
                 mode = int(mode)
-            return mode       
+            return mode
         except ValueError:
             print("This input is invalid")
 
@@ -191,7 +190,7 @@ def alarm_expired(alarm, alarm_index):
      snooze_active = True
      print()
      print("Alarm has expired")
-     #Remove timer and it's thread from lists 
+     #Remove timer and it's thread from lists
      alarms_list.remove(alarm)
      alarm_threads_list.pop(alarm_index)
      #Export to update list in file
@@ -199,7 +198,7 @@ def alarm_expired(alarm, alarm_index):
           pickle.dump(alarms_list, alarms_file)
      # Play the alarm sound, don't wait until it finishes to continue execution
      play_alarm()
-     print("Do you want to snooze alarm (y, yes / n, no)? ")  
+     print("Do you want to snooze alarm (y, yes / n, no)? ")
 
 def play_alarm():
    pygame.mixer.init()
@@ -213,7 +212,7 @@ def play_alarm():
        filedir = os.path.dirname(filepath)
        alarm_sound_path = os.path.join(filedir, "alarm.mp3")
        alarm_sound = pygame.mixer.Sound(alarm_sound_path)
-    alarm_sound.play(-1) 
+    alarm_sound.play(-1)
    except:
         print("Failed to play sound")
 
@@ -227,10 +226,10 @@ def set_alarm(alarm_time, alert):
       alarm_time = datetime.datetime.strptime(":".join(map(str, alarm_time)), '%d-%m-%Y:%H:%M:%S')
   #Set the year, month, and day of the alarm time to the current date
   alarm_time = alarm_time.replace(year=current_time.year,month=current_time.month,day=current_time.day)
-  
+
   #Calculate the time until the alarm in seconds
   time_until_alarm = (alarm_time - current_time).total_seconds()
-  
+
   #If the alarm is in the past, set it for the next day
   if time_until_alarm < 0:
      alarm_time = alarm_time + datetime.timedelta(days=1)
@@ -238,7 +237,7 @@ def set_alarm(alarm_time, alert):
 
   #Get date from alarm_time
   alarm_date = alarm_time.strftime('%d-%m-%Y')
-  
+
   #Get time from alarm_time
   alarm_time = alarm_time.strftime('%H:%M:%S')
 
@@ -247,11 +246,11 @@ def set_alarm(alarm_time, alert):
   alarm_thread = threading.Timer(time_until_alarm, alarm_expired, args=(alarm_item,len(timer_threads_list)))
 
   alarm_thread.start()
-  
+
   #Append alarms and threads to lists
   if alarm_item not in alarms_list:
-     alarms_list.append(alarm_item) 
-  alarm_threads_list.append(alarm_thread) 
+     alarms_list.append(alarm_item)
+  alarm_threads_list.append(alarm_thread)
 
   #Export list of alarms to file so it can be imported
   with open('alarms.pkl', "wb") as alarms_file:
@@ -260,10 +259,10 @@ def set_alarm(alarm_time, alert):
   #Convert the time until the alarm from seconds to hours, minutes, and seconds
   hours, remainder = divmod(time_until_alarm, 3600)
   minutes, seconds = divmod(remainder, 60)
-  
+
   global snooze_active
   if alert == "yes":
-    print("The alarm will ring at: %02d hours %02d minutes %02d seconds" % (hours, minutes, seconds))   
+    print("The alarm will ring at: %02d hours %02d minutes %02d seconds" % (hours, minutes, seconds))
     time.sleep(1.5)
 
 def set_alarm_sound():
@@ -277,24 +276,24 @@ def set_alarm_sound():
     while True:
         try:
             sound_file = str(input("Provide path to sound file: "))
-            #Reset to default value of None 
+            #Reset to default value of None
             if sound_file.strip().lower() == "none" or sound_file.strip().lower() == "":
                 sound_file = None
-                print("Alarm sound set")               
-                time.sleep(1.5)  
+                print("Alarm sound set")
+                time.sleep(1.5)
                 break
             else:
                 sound = pygame.mixer.Sound(sound_file)
                 with open('sound_file_preference.pkl', 'wb') as sound_preference_file:
                     pickle.dump(sound_file, sound_preference_file)
-                print("Alarm sound set") 
+                print("Alarm sound set")
                 print("Playing alarm preview")
                 #Play first 3 seconds of the file as a preview
                 sound.play(maxtime=3000)
                 break
         except:
-            print("Wrong file path")   
-     
+            print("Wrong file path")
+
 def set_snooze_duration():
     global snooze_duration
     clear()
@@ -310,31 +309,31 @@ def set_snooze_duration():
                 time.sleep(1.5)
                 break
             else:
-                print("Duration cannot be less or equal to 0")  
-        except:      
-            print("Invalid snooze duration input. Try again")              
+                print("Duration cannot be less or equal to 0")
+        except:
+            print("Invalid snooze duration input. Try again")
 
-def snooze():    
+def snooze():
      global snooze_duration
-     while True:          
+     while True:
           #Add 5 minutes to current time
           snooze_time = datetime.datetime.now() + datetime.timedelta(minutes=snooze_duration)
-          #Convert to a string in the format HH:MM:SS         
+          #Convert to a string in the format HH:MM:SS
           snooze_time = snooze_time.strftime("%H:%M:%S")
           snooze_time_split = [int(n) for n in snooze_time.split(":")]
           #Create alarm 5 minutes from now
           set_alarm(snooze_time_split, "no")
           #Disable snooze mode
-          snooze_active == False             
+          snooze_active == False
           break
-     
+
 #Clock functions
 
-def clock_settings():   
+def clock_settings():
     global show_date
     global show_seconds
     global AM_PM_format
-    
+
     #Display current settings
     print("Current settings: ")
     print(f"Show date: {show_date}")
@@ -348,12 +347,12 @@ def clock_settings():
             #Prompt for new settings
             show_date = int(input("Show date (0 for no, 1 for yes): "))
             show_seconds = int(input("Show seconds (0 for no, 1 for yes): "))
-            AM_PM_format = int(input("12 or 24 hour format (0 for 24-hour, 1 for 12-hour): "))           
+            AM_PM_format = int(input("12 or 24 hour format (0 for 24-hour, 1 for 12-hour): "))
 
             #Check if the inputs are valid
             if show_date not in [0, 1] or show_seconds not in [0, 1] or AM_PM_format not in [0, 1]:
                raise ValueError("Invalid input. Please enter 0 or 1.")
-                      
+
             #Export them to file
             with open('clock_settings.pkl', 'wb') as settings_file:
                  pickle.dump((show_date,show_seconds,AM_PM_format), settings_file)
@@ -372,7 +371,7 @@ def get_time():
        if time_input.strip().lower() == "q":
            return None
        try:
-        #Check if input is valid 
+        #Check if input is valid
         time_split = [int(n) for n in time_input.split(":")]
         if time_split[0] >= 24 or time_split[0] < 0:
             print("Invalid input. Hour cannot be bigger than 23 or smaller than 0 ")
@@ -389,7 +388,7 @@ def get_time():
        except:
             print("Invalid input. Please enter time in the format HH:MM:SS or press q to return to the alarm menu.")
             time.sleep(1.5)
-            continue 
+            continue
        return time_split
 
 def set_timer():
@@ -397,14 +396,14 @@ def set_timer():
         time_of_timer = get_time()
         #Quit
         if time_of_timer is None:
-           break      
+           break
         #Take hours, minutes and seconds from input
         h_timer = time_of_timer[0]
         min_timer = time_of_timer[1]
         sec_timer = time_of_timer[2]
         #Set timer with values from input
         start_timer(h_timer, min_timer, sec_timer)
-        break     
+        break
 
 def start_timer(hours, minutes, seconds):
      global timer_thread
@@ -417,21 +416,21 @@ def start_timer(hours, minutes, seconds):
      timer_duration = hours * 3600 + minutes * 60 + seconds
      #Start thread to activate timer with delay of timer duration
      timer_thread = threading.Timer(timer_duration, timer_expired, args=(timer_item, len(timer_threads_list)))
-     timer_thread.start()  
+     timer_thread.start()
      #Append timers and threads to lists so they can be shown or deleted. Ignore timers that have been already set
      if timer_item not in timers_list:
-        timers_list.append(timer_item) 
-     timer_threads_list.append(timer_thread) 
+        timers_list.append(timer_item)
+     timer_threads_list.append(timer_thread)
      #Export list of timers to file, so it can be imported at start
      with open('timers.pkl', "wb") as timer_file:
           pickle.dump(timers_list, timer_file)
      print("Timer set")
 
-def timer_expired(item, timer_index): 
+def timer_expired(item, timer_index):
              global timer_active
-             timer_active = True 
+             timer_active = True
              #Initialize mixer so the sound files can be played
-             pygame.mixer.init()           
+             pygame.mixer.init()
              print("\r")
              print("Timer has expired! Press anything to return")
              filepath = os.path.abspath(__file__)
@@ -439,7 +438,7 @@ def timer_expired(item, timer_index):
              sound_path = os.path.join(filedir, "timer.mp3")
              timer_sound = pygame.mixer.Sound(sound_path)
              timer_sound.play()
-             #Remove timer and it's thread from lists       
+             #Remove timer and it's thread from lists
              timers_list.remove(item)
              timer_threads_list.pop(timer_index)
              #Export to update list in file
@@ -448,7 +447,7 @@ def timer_expired(item, timer_index):
              time.sleep(1.5)
 
 #Set clear to clear terminal function
-clear = lambda: os.system("cls")   
+clear = lambda: os.system("cls")
 clear()
 
 #Main program
@@ -458,7 +457,7 @@ load_files()
 while True:
         #clock_settings()
         clear()
-        print("Welcome")  
+        print("Welcome")
         print("Program mode selection: ")
         print("1: Run Alarm. 2: Run Clock. 3: Run Stopwatch. 4: Run Timer or close program by pressing ctrl + c: ")
         program_mode = pick_mode()
@@ -467,7 +466,7 @@ while True:
         if program_mode == 1:
             while True:
                 clear()
-                
+
                 print("Alarm mode selection: ")
                 print("1: Set alarm. 2: Set alarm options. 3: Delete all alarms. 4: Change program mode")
                 print()
@@ -480,9 +479,9 @@ while True:
                     print("1: Set new alarm. 2: Show active alarms 3. Return ")
                     print()
                     setting_alarm_mode = three_options()
-                    
+
                     #Set new alarm
-                    if setting_alarm_mode == 1:              
+                    if setting_alarm_mode == 1:
                         while True:
                             clear()
                             alarm_input = get_time()
@@ -496,7 +495,7 @@ while True:
                     #Show active alarms
                     elif setting_alarm_mode == 2:
                         clear()
-                        
+
                         headers = ("Date", "Time")
 
                         #Print headers with spaces between them
@@ -513,23 +512,23 @@ while True:
                     elif setting_alarm_mode == 3:
                             clear()
                             break
-                    
-                    #Special mode to fix invalid input after timer has expired   
+
+                    #Special mode to fix invalid input after timer has expired
                     elif setting_alarm_mode == 1851323596:
                         print("\r")
                         continue
                     else:
-                        print("Alarm setting menu supports only inputs: 1,2 or 3.")    
+                        print("Alarm setting menu supports only inputs: 1,2 or 3.")
 
                 #Alarm settings
-                elif alarm_mode == 2:                   
+                elif alarm_mode == 2:
                     while True:
                         clear()
                         print("Alarm settings")
                         print("1. Alarm sound, 2. Snooze duration 3. Return")
                         alarm_setting = three_options()
                         if alarm_setting == 1:
-                            set_alarm_sound()    
+                            set_alarm_sound()
 
                         elif alarm_setting == 2:
                             set_snooze_duration()
@@ -537,14 +536,14 @@ while True:
                         elif alarm_setting == 3:
                             clear()
                             break
-                        #Special mode to fix invalid input after timer has expired   
+                        #Special mode to fix invalid input after timer has expired
                         elif setting_alarm_mode == 1851323596:
                             print("\r")
                             continue
                         else:
-                            print("This input is invalid. Please enter 1,2 or 3.")    
+                            print("This input is invalid. Please enter 1,2 or 3.")
 
-                #Clearing alarms   
+                #Clearing alarms
                 elif alarm_mode == 3:
                     while True:
                         clear()
@@ -561,17 +560,17 @@ while True:
                         else:
                             print("Invalid input. Please enter y, yes, n, or no.")
 
-                #Go back to choosing program mode 
+                #Go back to choosing program mode
                 elif alarm_mode == 4:
                     clear()
                     break
                 else:
                     print("Alarm mode menu supports only inputs: 1,2,3 or 4.")
 
-    #Clock 
+    #Clock
         elif program_mode == 2:
             while True:
-                clear()   
+                clear()
                 print("Clock mode selection: ")
                 print("1: Show current time. 2: Show time in diffrent time zones. 3: Set clock options. 4: Change program mode.")
                 print()
@@ -629,7 +628,7 @@ while True:
                     settings_format = settings.get((show_date, show_seconds, AM_PM_format))
                     #Print formatted time
                     formatted_time = current_time.strftime(settings_format)
-                    clear() 
+                    clear()
                     print(f"Time in {city}: {formatted_time}")
                     list_sleep = input("Press anything to go back")
 
@@ -639,23 +638,23 @@ while True:
                     clock_settings()
                     print("Settings set")
 
-                #Return to Clock modes menu                            
+                #Return to Clock modes menu
                 elif clock_mode == 4:
                     clear()
                     break
                 else:
                     print("Clock menu supports only inputs: 1,2,3 or 4.")
 
-    #Stopwatch 
-        elif program_mode == 3:           
+    #Stopwatch
+        elif program_mode == 3:
             while True:
                 clear()
-            
+
                 print("Stopwatch mode selection: ")
-                print("1: Run stopwatch. 2: Show stopwatch records. 3: Delete all stopwatch records. 4: Change program mode")     
+                print("1: Run stopwatch. 2: Show stopwatch records. 3: Delete all stopwatch records. 4: Change program mode")
                 mode = pick_mode()
                 #Start stopwatch
-                if mode == 1:     
+                if mode == 1:
                     while True:
                         clear()
                         try:
@@ -705,7 +704,7 @@ while True:
                             list_sleep = input("Press anything to go back")
                             break
 
-                #Show stopwatch records           
+                #Show stopwatch records
                 elif mode == 2:
                     clear()
                     headers = ("Date", "Time", "Duration")
@@ -719,8 +718,8 @@ while True:
                     print()
                     #Block going back until entering something
                     list_sleep = input("Press anything to go back")
-                
-                #Clearing stopwatch records    
+
+                #Clearing stopwatch records
                 elif mode == 3:
                     clear()
                     while True:
@@ -739,9 +738,9 @@ while True:
                         elif confirmation in ["n", "no"]:
                                 break
                         else:
-                            print("Invalid input. Please enter y, yes, n, or no.") 
+                            print("Invalid input. Please enter y, yes, n, or no.")
 
-                #Go back to choosing program mode                 
+                #Go back to choosing program mode
                 elif mode == 4:
                     clear()
                     break
@@ -764,10 +763,10 @@ while True:
                 if timer_mode == 1:
                     clear()
 
-                    set_timer()    
-                    
+                    set_timer()
+
                     time.sleep(1)
-                    print()           
+                    print()
                     pass
 
                 #Show set timers
@@ -787,7 +786,7 @@ while True:
                     #Block going back until entering something
                     list_sleep = input("Press anything to go back")
 
-                #Clearing timers     
+                #Clearing timers
                 elif timer_mode == 3:
                     clear()
                     while True:
@@ -798,8 +797,8 @@ while True:
                             if confirmation in ["y", "yes"]:
 
                                 clear_threads__and_lists(timer_threads_list, timers_list, 'timers.pkl')
-                                print("Timers deleted")  
-                                time.sleep(1.5)                        
+                                print("Timers deleted")
+                                time.sleep(1.5)
                                 break
 
                             elif confirmation in ["n", "no"]:
@@ -811,17 +810,17 @@ while True:
                         except ValueError:
                                 print("This input is invalid. Please enter y, yes, n, or no.")
 
-                #Go back to choosing program mode                
+                #Go back to choosing program mode
                 elif timer_mode == 4:
                     clear()
                     break
-                
+
                 else:
                     print("This input is invalid. Please enter 1,2,3 or 4.")
-        #Special mode to fix invalid input after timer has expired           
+        #Special mode to fix invalid input after timer has expired
         elif program_mode == 1851323596:
             print("\r")
             continue
 
         else:
-            print("This menu supports only inputs 1,2,3 or 4.")            
+            print("This menu supports only inputs 1,2,3 or 4.")
